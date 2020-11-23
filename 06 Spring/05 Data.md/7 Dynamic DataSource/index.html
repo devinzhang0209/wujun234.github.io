@@ -4890,18 +4890,18 @@ public class DataSourceConfig {
 
     //多数据源事务管理
     @Bean(name=&quot;tranMagMaster&quot;)
-    public PlatformTransactionManager bfTransactionManager(@Qualifier(&quot;masterDataSource&quot;)DataSource dataSource) {
+    public PlatformTransactionManager masterTransactionManager(@Qualifier(&quot;masterDataSource&quot;)DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
     @Bean(name=&quot;tranMagSlave&quot;)
-    public PlatformTransactionManager bfscrmTransactionManager(@Qualifier(&quot;slaveDataSource&quot;)DataSource dataSource) {
+    public PlatformTransactionManager slaveTransactionManager(@Qualifier(&quot;slaveDataSource&quot;)DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
     }
 }
 </code></pre>
 <h3 id="3-JdbcTemplatesConfig"><a class="header-anchor" href="#3-JdbcTemplatesConfig"></a>3 JdbcTemplatesConfig</h3>
 <pre><code>@Configuration
-public class JdbcTemplatesConfig extends DataSourceConfig {
+public class JdbcTemplatesConfig{
 
     //支持JdbcTemplate实现多数据源
     @Bean(name=&quot;masterJdbcTemplate&quot;)
@@ -4920,25 +4920,19 @@ public class JdbcTemplatesConfig extends DataSourceConfig {
 @MapperScan(basePackages = &quot;com.xxx.mapper.master&quot;, 
         sqlSessionTemplateRef = &quot;masterSqlSessionTemplate&quot;
 )
-public class MybatisConfigMaster extends DataSourceConfig {
+public class MybatisConfigMaster{
     @Bean
-    SqlSessionFactory masterSqlSessionFactory(){
-
+    SqlSessionTemplate masterSqlSessionTemplate(DataSource masterDataSource, org.apache.ibatis.session.Configuration globalConfiguration) {
         SqlSessionFactory sqlSessionFactory = null;
         try {
             SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-            sqlSessionFactoryBean.setConfiguration(globalConfiguration());
-            sqlSessionFactoryBean.setDataSource(masterDataSource());
+            sqlSessionFactoryBean.setConfiguration(globalConfiguration);
+            sqlSessionFactoryBean.setDataSource(masterDataSource);
             sqlSessionFactory = sqlSessionFactoryBean.getObject();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return sqlSessionFactory;
-    }
-
-    @Bean
-    SqlSessionTemplate masterSqlSessionTemplate(){
-        return new SqlSessionTemplate(masterSqlSessionFactory());
+        return new SqlSessionTemplate(sqlSessionFactory);
     }
 }
 </code></pre>
@@ -4947,25 +4941,19 @@ public class MybatisConfigMaster extends DataSourceConfig {
 @MapperScan(basePackages = &quot;com.xxx.mapper.slave&quot;, 
         sqlSessionTemplateRef = &quot;slaveSqlSessionTemplate&quot;
 )
-public class MybatisConfigSlave extends DataSourceConfig {
+public class MybatisConfigSlave{
     @Bean
-    SqlSessionFactory slaveSqlSessionFactory(){
-
+    SqlSessionTemplate slaveSqlSessionTemplate(DataSource slaveDataSource, org.apache.ibatis.session.Configuration globalConfiguration) {
         SqlSessionFactory sqlSessionFactory = null;
         try {
             SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
-            sqlSessionFactoryBean.setConfiguration(globalConfiguration());
-            sqlSessionFactoryBean.setDataSource(slaveDataSource());
+            sqlSessionFactoryBean.setConfiguration(globalConfiguration);
+            sqlSessionFactoryBean.setDataSource(slaveDataSource);
             sqlSessionFactory = sqlSessionFactoryBean.getObject();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return sqlSessionFactory;
-    }
-
-    @Bean
-    SqlSessionTemplate slaveSqlSessionTemplate(){
-        return new SqlSessionTemplate(slaveSqlSessionFactory());
+        return new SqlSessionTemplate(sqlSessionFactory);
     }
 }
 </code></pre>
@@ -4978,16 +4966,16 @@ public class MybatisConfigSlave extends DataSourceConfig {
     <div class="post-guide">
         <div class="item left">
             
-              <a href="/06%20Spring/05%20Data.md/8%20Transaction/">
+              <a href="/06%20Spring/05%20Data.md/5%20Spring%20Data%20Redis/">
                   <i class="fa fa-angle-left" aria-hidden="true"></i>
-                  8 Transaction
+                  5 Spring Data Redis
               </a>
             
         </div>
         <div class="item right">
             
-              <a href="/06%20Spring/05%20Data.md/6%20Spring%20Cache/">
-                6 Spring Cache
+              <a href="/06%20Spring/05%20Data.md/8%20Transaction/">
+                8 Transaction
                 <i class="fa fa-angle-right" aria-hidden="true"></i>
               </a>
             

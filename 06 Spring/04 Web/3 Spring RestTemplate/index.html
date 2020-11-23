@@ -4988,6 +4988,60 @@ RestTemplate restTemplate(){
     return restTemplate;
 }
 </code></pre>
+<pre><code>@Slf4j
+@Configuration
+public class RestClientConfig {
+
+    @Value(&quot;${httpClient.maxTotal:400}&quot;)
+    private Integer maxTotal;
+    @Value(&quot;${httpClient.defaultMaxPerRoute:400}&quot;)
+    private Integer defaultMaxPerRoute;
+    @Value(&quot;${httpClient.timeout:20000}&quot;)
+    private Integer timeout;
+
+    @Value(&quot;${proxy.enabled}&quot;)
+    Boolean proxyEnable;
+
+    @Bean
+    public RestTemplate restTemplate() {
+        ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient());
+        return new RestTemplate(requestFactory);
+    }
+
+    @Bean
+    public HttpClient httpClient() {
+        Registry&lt;ConnectionSocketFactory&gt; registry = RegistryBuilder.&lt;ConnectionSocketFactory&gt;create()
+                .register(&quot;http&quot;, PlainConnectionSocketFactory.getSocketFactory())
+                .register(&quot;https&quot;, SSLConnectionSocketFactory.getSocketFactory())
+                .build();
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
+        connectionManager.setMaxTotal(maxTotal);
+        connectionManager.setDefaultMaxPerRoute(defaultMaxPerRoute);
+
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setSocketTimeout(timeout)
+                .setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(timeout)
+                .build();
+
+        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create()
+                .setDefaultRequestConfig(requestConfig)
+                .setConnectionManager(connectionManager)
+                .setConnectionManagerShared(true);
+
+        log.info(&quot;proxyEnable: &quot; + proxyEnable);
+        if (proxyEnable) {
+            //设置代理
+            HttpHost proxy = new HttpHost(&quot;web-proxy.oa.com&quot;, 8080);
+            httpClientBuilder.setProxy(proxy);
+        }
+
+        return httpClientBuilder.build();
+    }
+
+}
+
+</code></pre>
 <h5 id="System-properties"><a class="header-anchor" href="#System-properties"></a>System properties</h5>
 <pre><code>Properties props = System.getProperties();
 props.put(&quot;https.proxyHost&quot;, &quot;your.proxy.server&quot;);
@@ -5014,8 +5068,8 @@ System.out.println(tt);
         </div>
         <div class="item right">
             
-              <a href="/06%20Spring/04%20Web/4%20%E8%B7%A8%E5%9F%9F/">
-                4 跨域
+              <a href="/06%20Spring/05%20Data.md/1%20JdbcTemplate/">
+                1 JdbcTemplate
                 <i class="fa fa-angle-right" aria-hidden="true"></i>
               </a>
             
